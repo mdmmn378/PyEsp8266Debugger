@@ -1,23 +1,24 @@
-from PyQt4 import uic
-from PyQt4 import QtGui
-from PyQt4.QtGui import QTextOption
+from PyQt5 import uic
+from PyQt5 import QtWidgets
 import sys
-from PyQt4.QtGui import QApplication
+from PyQt5.QtWidgets import QApplication,QMainWindow,QWidget
+from PyQt5 import QtGui
 from serial.tools import list_ports
 from serial import Serial
 from threading import Thread
 import time
-
+import design
 comPorts = []
 myPort = Serial(timeout=5)
 baudList = ['1200', '2400', '4800', '19200', '38400', '57600', '115200'][::-1]
-Esp8266Form, Esp8266Class = uic.loadUiType('uxdesign.ui')
 temp = ''
-
-
-class Esp8266(Esp8266Form, QtGui.QWidget, Thread):
+Esp8266Form=design.Ui_Form
+Esp8266Class=QWidget
+class Esp8266(Esp8266Form, Esp8266Class, Thread):
     def run(self):
         global temp
+        if not self.is_alive():
+            self.close()
         while True:
             time.sleep(.1)
             self.buildList()
@@ -28,7 +29,7 @@ class Esp8266(Esp8266Form, QtGui.QWidget, Thread):
                     if myPort.readable():
                         try:
                             self.var = myPort.readline()
-                            self.var = self.var.decode(encoding='US-ASCII')
+                            self.var = self.var.decode(encoding='UTF-8')
                         except:
                             self.var = self.var
                         self.var = str(self.var)
@@ -71,7 +72,8 @@ class Esp8266(Esp8266Form, QtGui.QWidget, Thread):
         self.pushButton_1.setStyleSheet(None)
 
     def __init__(self):
-        QtGui.QWidget.__init__(self)
+        # QtGui.QWidget.__init__(self)
+        super().__init__()
         Thread.__init__(self)
         self.flag = 0
         self.flag2 = 0
@@ -97,7 +99,6 @@ class Esp8266(Esp8266Form, QtGui.QWidget, Thread):
         self.P_REFRESH.clicked.connect(self.refresh)
         self.P_ATCWJAPQ.clicked.connect(self.atcwjapq)
         self.P_ATCWJAPE.clicked.connect(self.atcwjape)
-
         self.B_ATCWSAP_1.setPlaceholderText('SSID')
         self.B_ATCWSAP_2.setPlaceholderText('KEY')
         self.B_ATCIPSTART_1.setPlaceholderText('TCP/UDP')
@@ -107,6 +108,7 @@ class Esp8266(Esp8266Form, QtGui.QWidget, Thread):
         self.B_ATCWMODE_1.setPlaceholderText('1/2/3')
         self.B_ATCWJAP_1.setPlaceholderText('SSID')
         self.B_ATCWJAP_2.setPlaceholderText('KEY')
+        self.setDaemon(True)
 
     def atcwjape(self):
         a = self.B_ATCWJAP_1.text()
@@ -259,8 +261,9 @@ class Esp8266(Esp8266Form, QtGui.QWidget, Thread):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    app=QApplication(sys.argv)
     esp8266 = Esp8266()
     esp8266.start()
     esp8266.show()
     sys.exit(app.exec_())
+
